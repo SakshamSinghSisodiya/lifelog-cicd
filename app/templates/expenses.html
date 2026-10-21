@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+<h1>Expenses · {{ summary.month }}</h1>
+<div class="grid">
+  <section class="card c-peach"><div class="card-body">
+    <h2>Budget</h2>
+    <p class="big">{{ summary.percent }}% <small>used</small></p>
+    {% set bar_value = summary.bar %}{% set bar_label = 'Budget used' %}{% set bar_status = summary.status %}
+    {% include "_bar.html" %}
+    <p>${{ '%.2f'|format(summary.spent) }} of ${{ '%.2f'|format(summary.budget) }}</p>
+    <form method="post" action="{{ url_for('main.set_budget') }}" class="stack">
+      <label for="budget">Monthly budget ($)</label>
+      <input id="budget" name="budget" type="number" step="0.01" min="1" required>
+      <button class="btn small" type="submit">Set budget</button>
+    </form>
+  </div></section>
+
+  <section class="card c-sky"><div class="card-body">
+    <h2>Log an expense</h2>
+    <form method="post" class="stack">
+      <label for="amount">Amount ($)</label>
+      <input id="amount" name="amount" type="number" step="0.01" min="0.01" required>
+      <label for="category">Category</label>
+      <select id="category" name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+      <label for="day">Date</label>
+      <input id="day" name="day" type="date" value="{{ today }}" required>
+      <button class="btn" type="submit">Add expense</button>
+    </form>
+  </div></section>
+
+  <section class="card c-butter"><div class="card-body">
+    <h2>By category</h2>
+    {% if summary.totals %}
+    <table>
+      <caption class="sr">Monthly total per category</caption>
+      <thead><tr><th scope="col">Category</th><th scope="col">Total</th></tr></thead>
+      <tbody>{% for cat, total in summary.totals.items() %}<tr><td>{{ cat }}</td><td>${{ '%.2f'|format(total) }}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p>Nothing logged this month.</p>{% endif %}
+  </div></section>
+
+  <section class="card c-mint"><div class="card-body">
+    <h2>Recent</h2>
+    <ul class="plain">{% for e in recent %}<li>{{ e.day }} · {{ e.category }} · ${{ '%.2f'|format(e.amount) }}</li>{% endfor %}</ul>
+  </div></section>
+</div>
+{% endblock %}

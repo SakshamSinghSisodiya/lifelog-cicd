@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Habits{% endblock %}
+{% block content %}
+<h1>Habits</h1>
+<div class="grid">
+  <section class="card c-butter"><div class="card-body">
+    <h2>New habit</h2>
+    <form method="post" class="stack">
+      <label for="name">Habit name</label>
+      <input id="name" name="name" maxlength="60" required>
+      <button class="btn" type="submit">Add habit</button>
+    </form>
+  </div></section>
+  {% for h in habits %}
+  <section class="card c-mint"><div class="card-body">
+    <h2>{{ h.name }}</h2>
+    <p>Current streak <strong>{{ h.current }}</strong> · Longest <strong>{{ h.longest }}</strong></p>
+    {% set bar_value = (h.current / h.longest * 100) if h.longest else 0 %}
+    {% set bar_label = 'Current streak compared with longest' %}
+    {% include "_bar.html" %}
+    <form method="post" action="{{ url_for('main.toggle', habit_id=h.id) }}">
+      <button class="btn" type="submit" aria-pressed="{{ 'true' if h.done_today else 'false' }}">{{ 'Done today ✓ (undo)' if h.done_today else 'Check in today' }}</button>
+    </form>
+  </div></section>
+  {% endfor %}
+</div>
+{% endblock %}

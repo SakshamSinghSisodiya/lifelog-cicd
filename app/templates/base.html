@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}LifeLog{% endblock %} · LifeLog</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('main.dashboard') }}">
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Paper crane logo">
+        <polygon points="6,34 30,30 22,44" fill="#9bd8c4"/>
+        <polygon points="30,30 58,12 40,40" fill="#f7c6a8"/>
+        <polygon points="22,44 30,30 40,40 34,52" fill="#8cc6ea"/>
+        <polygon points="58,12 62,20 50,24" fill="#f6df8d"/>
+        <polygon points="34,52 40,40 46,56" fill="#6fb8a0"/>
+      </svg>
+      <span>LifeLog</span>
+    </a>
+    <nav aria-label="Main">
+      <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('main.habits') }}">Habits</a>
+      <a href="{{ url_for('main.expenses') }}">Expenses</a>
+      {% block nav_extra %}{% endblock %}
+    </nav>
+  </header>
+  <main id="main">
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<p class="notice" role="alert">{{ m }}</p>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <span>Version <strong>{{ build.version }}</strong></span>
+    <span>Build <strong>#{{ build.number }}</strong></span>
+    <span>Commit <strong>{{ build.commit }}</strong></span>
+    <span>Pod <strong>{{ build.pod }}</strong></span>
+  </footer>
+</body>
+</html>

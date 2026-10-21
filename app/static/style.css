@@ -1,0 +1,180 @@
+/* LifeLog "Origami fold" theme. Pure CSS, system fonts, no external assets. */
+:root {
+  --paper: #fbf7ef;
+  --ink: #26343f;
+  --muted: #55646f;
+  --mint: #cdeee1;
+  --peach: #fbdcc7;
+  --sky: #cfe6f6;
+  --butter: #faedb4;
+  --accent: #2b6b5e;
+  --accent-dark: #1d4f45;
+  --fold: 28px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font);
+  color: var(--ink);
+  line-height: 1.5;
+  background-color: var(--paper);
+  /* paper grain: two offset dot lattices plus faint fibres */
+  background-image:
+    radial-gradient(rgba(38, 52, 63, 0.05) 1px, transparent 1.2px),
+    radial-gradient(rgba(38, 52, 63, 0.035) 1px, transparent 1.2px),
+    repeating-linear-gradient(35deg, rgba(255, 255, 255, 0.35) 0 2px, transparent 2px 7px);
+  background-size: 5px 5px, 7px 7px, auto;
+  background-position: 0 0, 2px 3px, 0 0;
+}
+
+a { color: var(--accent-dark); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #1b6fb5;
+  outline-offset: 2px;
+}
+
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 8px; top: 8px; background: #fff; padding: 6px 10px; z-index: 10; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* header */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  background: linear-gradient(120deg, var(--mint) 0 55%, var(--sky) 55% 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 96% 100%, 0 100%);
+  padding-bottom: 22px;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 700; color: var(--ink); text-decoration: none; }
+.logo { width: 42px; height: 42px; }
+nav { display: flex; gap: 6px; flex-wrap: wrap; }
+nav a { padding: 6px 14px; color: var(--ink); text-decoration: none; font-weight: 600; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+nav a:hover { background: rgba(255, 255, 255, 0.65); }
+
+main { flex: 1; width: min(1080px, 100%); margin: 0 auto; padding: 24px clamp(16px, 4vw, 40px) 40px; }
+h1 { font-size: clamp(1.4rem, 3vw, 2rem); margin: 8px 0 20px; }
+h2 { font-size: 1.1rem; margin: 0 0 12px; }
+
+.grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+/* folded paper card: wrapper carries the shadow, inner body is clipped */
+.card {
+  filter: drop-shadow(0 1px 1px rgba(38, 52, 63, 0.18)) drop-shadow(0 6px 8px rgba(38, 52, 63, 0.12)) drop-shadow(0 14px 18px rgba(38, 52, 63, 0.08));
+}
+.card-body {
+  position: relative;
+  padding: 22px 22px 24px;
+  clip-path: polygon(0 0, calc(100% - var(--fold)) 0, 100% var(--fold), 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+  /* crease: a pale ridge with a soft shadow beside it, at an angle */
+  background:
+    linear-gradient(112deg, transparent 0 64%, rgba(255, 255, 255, 0.6) 64% 64.5%, rgba(38, 52, 63, 0.07) 64.5% 66%, transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 40%),
+    var(--tint);
+}
+.card-body::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--fold);
+  height: var(--fold);
+  background: linear-gradient(225deg, transparent 50%, rgba(38, 52, 63, 0.22) 50%);
+}
+.c-mint { --tint: var(--mint); }
+.c-peach { --tint: var(--peach); }
+.c-sky { --tint: var(--sky); }
+.c-butter { --tint: var(--butter); }
+
+.big { font-size: 2rem; font-weight: 700; margin: 4px 0 10px; }
+.big small { font-size: 1rem; font-weight: 400; color: var(--muted); }
+.list, .plain { list-style: none; padding: 0; margin: 0; }
+.list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(38, 52, 63, 0.25); }
+.list li:last-child { border-bottom: 0; }
+.plain li { padding: 2px 0; }
+.done { text-decoration: line-through; color: var(--muted); }
+
+/* forms */
+.stack { display: grid; gap: 8px; }
+label { font-weight: 600; font-size: 0.92rem; }
+input, select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 2px solid rgba(38, 52, 63, 0.55);
+  background: #fffdf8;
+  color: var(--ink);
+  width: 100%;
+}
+.btn {
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+  padding: 10px 18px;
+  color: #fff;
+  background: var(--accent);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  box-shadow: 0 2px 0 var(--accent-dark);
+  transform-origin: bottom center;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.btn.small { padding: 6px 12px; font-size: 0.9rem; white-space: nowrap; }
+.btn:hover { background: var(--accent-dark); transform: perspective(300px) rotateX(-8deg) translateY(-2px); }
+.btn:active { transform: translateY(1px); }
+
+.notice { background: var(--butter); border-left: 6px solid #c9a227; padding: 10px 14px; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 6px 4px; border-bottom: 1px dashed rgba(38, 52, 63, 0.25); }
+
+/* progress as a folded paper strip */
+.strip {
+  height: 22px;
+  margin: 8px 0;
+  background: rgba(38, 52, 63, 0.14);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 100%, 8px 100%);
+  overflow: hidden;
+}
+.strip span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  background:
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 14px),
+    var(--accent);
+  transition: width 0.4s ease;
+}
+.strip-warn span { background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 14px), #a8740a; }
+.strip-over span { background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 14px), #b3402e; }
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 22px;
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--paper);
+  background: var(--ink);
+  clip-path: polygon(0 12px, 4% 0, 100% 0, 100% 100%, 0 100%);
+  padding-top: 22px;
+}
+
+@media (max-width: 520px) {
+  .site-header { clip-path: none; }
+  nav a { padding: 6px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  .btn:hover { transform: none; }
+}

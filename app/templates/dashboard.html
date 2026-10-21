@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Today, {{ today.strftime('%A %d %B') }}</h1>
+<div class="grid">
+  <section class="card c-mint"><div class="card-body">
+    <h2>Today's habits</h2>
+    {% if habits %}
+    <ul class="list">
+      {% for h in habits %}
+      <li>
+        <span class="{{ 'done' if h.done_today }}">{{ h.name }}</span>
+        <form method="post" action="{{ url_for('main.toggle', habit_id=h.id) }}">
+          <input type="hidden" name="next" value="{{ url_for('main.dashboard') }}">
+          <button class="btn small" type="submit" aria-pressed="{{ 'true' if h.done_today else 'false' }}">{{ 'Done ✓' if h.done_today else 'Check in' }}</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p>No habits yet. <a href="{{ url_for('main.habits') }}">Add one</a>.</p>{% endif %}
+  </div></section>
+
+  <section class="card c-peach"><div class="card-body">
+    <h2>{{ summary.month }} spend vs budget</h2>
+    <p class="big">${{ '%.2f'|format(summary.spent) }} <small>of ${{ '%.2f'|format(summary.budget) }}</small></p>
+    {% set bar_value = summary.bar %}{% set bar_label = 'Budget used' %}{% set bar_status = summary.status %}
+    {% include "_bar.html" %}
+    <p>{{ summary.percent }}% of budget used</p>
+  </div></section>
+
+  <section class="card c-sky"><div class="card-body">
+    <h2>Streak highlights</h2>
+    {% if best and best.current %}
+      <p class="big">{{ best.current }} day{{ '' if best.current == 1 else 's' }}</p>
+      <p>Current best streak: <strong>{{ best.name }}</strong></p>
+    {% else %}<p>Check in today to start a streak.</p>{% endif %}
+    <ul class="plain">
+      {% for h in habits %}<li>{{ h.name }}: best ever {{ h.longest }}</li>{% endfor %}
+    </ul>
+  </div></section>
+</div>
+{% endblock %}

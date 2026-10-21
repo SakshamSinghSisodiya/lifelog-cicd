@@ -5,7 +5,7 @@ from datetime import date
 def percent_complete(current: float, target: float) -> float:
     if target <= 0:
         return 0.0
-    return round(min(current / target * 100, 100), 1)
+    return round(min(current / target * 100, 100.0), 1)
 
 
 def days_left(deadline: date, today: date) -> int:

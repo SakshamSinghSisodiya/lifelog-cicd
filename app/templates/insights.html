@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bar %}
+{% block title %}Insights{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Since {{ since.strftime('%d %b') }}</p><h1>Insights</h1></div>
+  <nav class="daynav" aria-label="Range">
+    {% for r in ranges %}<a href="{{ url_for('insights.view', range=r) }}" {% if r == n %}aria-current="true"{% endif %}>{{ r }} days</a>{% endfor %}
+  </nav>
+</div>
+<section class="summary"><p class="big">{{ overall }}%<span> of scheduled check-ins completed</span></p>{{ bar(overall, 'Overall completion') }}</section>
+
+<div class="stack-grid">
+{% for s in sections %}
+{% set t = s.t %}
+<section class="panel tone-{{ t.color }}">
+  <h2><span class="dot" aria-hidden="true"></span><a href="{{ url_for('trackers.detail', tracker_id=t.id) }}">{{ t.name }}</a><span class="badge">{{ t.type }}</span></h2>
+  {% if t.type in ('check', 'count') %}
+    <p class="facts"><b>{{ s.rate }}%</b> done · streak <b>{{ s.current }}</b> · best <b>{{ s.best }}</b></p>
+  {% else %}
+    <p class="facts">logged <b>{{ s.logged }}</b> of {{ n }} days</p>
+  {% endif %}
+  <ol class="heat" aria-label="{{ t.name }} over {{ n }} days">{% for c in s.cells %}<li class="{{ c.state }}" title="{{ c.day.strftime('%a %d %b') }}"></li>{% endfor %}</ol>
+
+  {% if s.spark is defined %}
+    <svg class="spark" viewBox="0 0 240 56" role="img" aria-label="{{ t.name }} trend, average {{ s.avg|num if s.avg is not none else 'none' }}">
+      <polyline points="{{ s.spark.points }}" fill="none" stroke="var(--tone)" stroke-width="2" stroke-linejoin="round"/>
+      {% for x, y in s.spark.dots %}<circle cx="{{ x }}" cy="{{ y }}" r="2.4" fill="var(--tone)"/>{% endfor %}
+    </svg>
+    {% if s.avg is not none %}<p class="facts">avg <b>{{ s.avg }}</b> · low <b>{{ s.low|num }}</b> · high <b>{{ s.high|num }}</b> {{ t.unit }}</p>{% endif %}
+  {% endif %}
+
+  {% if s.money is defined %}
+    <p class="facts">total <b>{{ currency }}{{ s.money.total|num }}</b> · avg/day <b>{{ currency }}{{ s.money.avg|num }}</b></p>
+    <div class="chart" role="img" aria-label="Daily spending over {{ n }} days">
+      {% for b in s.money.bars %}<div class="col" title="{{ b.day.strftime('%a %d %b') }}: {{ currency }}{{ b.value|num }}"><i style="height: {{ b.height }}%"></i></div>{% endfor %}
+    </div>
+    {% for c in s.money.by_category %}
+    <div class="catrow"><span>{{ c.name }}</span>{{ bar(c.percent, c.name ~ ' share') }}<b>{{ currency }}{{ c.amount|num }}</b></div>
+    {% endfor %}
+  {% endif %}
+</section>
+{% else %}
+<section class="panel empty"><h2>No trackers yet</h2><p><a href="{{ url_for('trackers.new') }}">Create one</a> to see insights.</p></section>
+{% endfor %}
+</div>
+{% endblock %}

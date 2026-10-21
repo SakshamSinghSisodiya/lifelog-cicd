@@ -3,31 +3,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}LifeLog{% endblock %} · LifeLog</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='6,34 30,30 22,44' fill='%239bd8c4'/%3E%3Cpolygon points='30,30 58,12 40,40' fill='%23f7c6a8'/%3E%3Cpolygon points='22,44 30,30 40,40 34,52' fill='%238cc6ea'/%3E%3C/svg%3E">
+  <meta name="color-scheme" content="light dark">
+  <title>{% block title %}Today{% endblock %} · LifeLog</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%232f6f5e'/%3E%3Cpath d='M8 9l4 3-4 3M13 16h4' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <header class="site-header">
-    <a class="brand" href="{{ url_for('main.dashboard') }}">
-      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Paper crane logo">
-        <polygon points="6,34 30,30 22,44" fill="#9bd8c4"/>
-        <polygon points="30,30 58,12 40,40" fill="#f7c6a8"/>
-        <polygon points="22,44 30,30 40,40 34,52" fill="#8cc6ea"/>
-        <polygon points="58,12 62,20 50,24" fill="#f6df8d"/>
-        <polygon points="34,52 40,40 46,56" fill="#6fb8a0"/>
-      </svg>
-      <span>LifeLog</span>
-    </a>
-    {% set ep = request.endpoint %}
-    <nav aria-label="Main">
-      <a href="{{ url_for('main.dashboard') }}" {% if ep == 'main.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
-      <a href="{{ url_for('main.habits') }}" {% if ep == 'main.habits' %}aria-current="page"{% endif %}>Habits</a>
-      <a href="{{ url_for('main.expenses') }}" {% if ep == 'main.expenses' %}aria-current="page"{% endif %}>Expenses</a>
-      <a href="{{ url_for('goals.goals') }}" {% if ep == 'goals.goals' %}aria-current="page"{% endif %}>Goals</a>
-    </nav>
-  </header>
+  <div class="top">
+    <div class="top-inner">
+      <header class="bar-row">
+        <a class="brand" href="{{ url_for('main.today') }}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="currentColor"/><path d="M8 9l4 3-4 3M13 16h4" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          LifeLog
+        </a>
+        {% set ep = request.endpoint or '' %}
+        <nav aria-label="Main">
+          <a href="{{ url_for('main.today') }}" {% if ep == 'main.today' %}aria-current="page"{% endif %}>Today</a>
+          <a href="{{ url_for('main.log') }}" {% if ep == 'main.log' %}aria-current="page"{% endif %}>Log</a>
+          <a href="{{ url_for('insights.view') }}" {% if ep == 'insights.view' %}aria-current="page"{% endif %}>Insights</a>
+          <a href="{{ url_for('trackers.manage') }}" {% if ep.startswith('trackers.') %}aria-current="page"{% endif %}>Trackers</a>
+          <a href="{{ url_for('goals.goals') }}" {% if ep.startswith('goals.') %}aria-current="page"{% endif %}>Goals</a>
+        </nav>
+      </header>
+      <form id="capture" class="capture" autocomplete="off" role="search" aria-label="Capture">
+        <label class="sr" for="cap-input">Log anything</label>
+        <div class="cap-row">
+          <span class="prompt" aria-hidden="true">›</span>
+          <input id="cap-input" name="text" placeholder="Log anything… e.g. water 3" spellcheck="false" autocapitalize="off" enterkeyhint="send">
+          <kbd title="Press / to focus">/</kbd>
+          <button class="btn" type="submit">Log</button>
+        </div>
+        <div id="cap-preview" class="cap-preview" aria-live="polite"></div>
+        <div id="cap-suggest" class="chips"></div>
+        <div id="cap-hint" class="chips hint">
+          <span>Try</span>
+          {% for ex in ['gym', 'water 3', 'sleep 7.5', 'mood 4', 'spent 250 lunch', 'yesterday gym', 'undo'] %}
+          <button type="button" class="chip" data-fill="{{ ex }}">{{ ex }}</button>
+          {% endfor %}
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <main id="main">
     {% with messages = get_flashed_messages() %}
       {% for m in messages %}<p class="notice" role="alert">{{ m }}</p>{% endfor %}
@@ -41,5 +59,6 @@
     <span>Frontend pod <strong>{{ build.frontend_pod }}</strong></span>
     <span>Backend pod <strong>{{ build.pod }}</strong></span>
   </footer>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
 </html>

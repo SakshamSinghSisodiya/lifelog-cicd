@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Log{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Everything you captured</p><h1>Log</h1></div></div>
+{% for day, rows in days %}
+<section class="panel logday">
+  <h2>{{ 'Today' if day == today else 'Yesterday' if (today - day).days == 1 else day.strftime('%A, %d %B') }}</h2>
+  <ul class="rows compact">
+    {% for r in rows %}
+    <li class="row tone-{{ r.color }}"><span class="dot" aria-hidden="true"></span>
+      <a class="name" href="{{ url_for('trackers.detail', tracker_id=r.tracker_id) }}">{{ r.name }}</a>
+      <span class="entry">{{ r.text }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% else %}
+<section class="panel empty"><h2>Nothing logged in the last two weeks</h2><p>Type something in the bar above to start your log.</p></section>
+{% endfor %}
+{% endblock %}

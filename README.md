@@ -79,7 +79,7 @@ Branch `v2-goals` adds a **Goals** module (name, target, progress, deadline, per
 Merging it into `main` and pushing triggers a new build. The footer build number changes, the pod names change after the rolling update, and a Goals link appears in the navigation.
 The Jenkinsfile version also moves from 1.0.0 to 2.0.0.
 
-Persistence note: SQLite lives inside each pod, so data resets when a pod is replaced and each replica has its own data. A PersistentVolumeClaim (or a shared database) would fix this; it is left out to keep the assignment focused on the pipeline.
+Persistence note: SQLite lives inside the single backend pod, so data resets when that pod is replaced (and the backend cannot be scaled to 2 replicas without them each having their own data). A PersistentVolumeClaim (or a shared database) would fix this; it is left out to keep the assignment focused on the pipeline.
 
 ## 7. Troubleshooting
 

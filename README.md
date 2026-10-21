@@ -21,7 +21,14 @@ pytest -q
 flask --app wsgi run        # http://127.0.0.1:5000
 ```
 
-Layout: `app/` (factory, routes, `db.py`, pure logic in `habits_logic.py` and `expenses_logic.py`), `tests/`, `Dockerfile`, `Jenkinsfile`, `k8s/`.
+Layout: `app/` (factory, routes, `db.py`, pure logic in `habits_logic.py` and `expenses_logic.py`), `tests/`, `backend/Dockerfile`, `frontend/` (nginx image), `docker-compose.yml`, `Jenkinsfile`, `k8s/`.
+
+Two images are built from one repo:
+
+- **Backend** (`lifelog-backend`): Flask + gunicorn + SQLite, port 5000, 1 replica.
+- **Frontend** (`lifelog-frontend`): nginx serving the static CSS and proxying all other requests to the backend, port 8080, 2 replicas. It is the only public entry point.
+
+Run both locally: `docker compose up --build`, then open http://localhost:8080.
 
 ## 2. Pipeline stages
 
@@ -29,9 +36,9 @@ Layout: `app/` (factory, routes, `db.py`, pure logic in `habits_logic.py` and `e
 |---|---|
 | Checkout | Jenkins clones the GitHub repo and records the short commit id. |
 | Build & Test | Creates a Python venv, installs `requirements.txt`, runs `pytest`. A failing test stops the pipeline. |
-| Docker Build | Builds `saksham122004/lifelog` with build args `APP_VERSION`, `GIT_COMMIT`, `BUILD_NUMBER`; tags `:<build number>` and `:latest`. |
-| Push Image | Logs in to Docker Hub with credential `dockerhub-creds` (`--password-stdin`) and pushes both tags. |
-| Deploy to Minikube | Writes the new image tag into `k8s/deployment.yaml`, runs `kubectl apply -f k8s/`, waits with `kubectl rollout status`. |
+| Docker Build | Builds `saksham122004/lifelog-backend` and `saksham122004/lifelog-frontend` with build args `APP_VERSION`, `GIT_COMMIT`, `BUILD_NUMBER`; tags each `:<build number>` and `:latest`. |
+| Push Image | Logs in to Docker Hub with credential `dockerhub-creds` (`--password-stdin`) and pushes both images, both tags. |
+| Deploy to Minikube | Writes the new image tags into `k8s/backend.yaml` and `k8s/frontend.yaml`, runs `kubectl apply -f k8s/`, waits for both rollouts. |
 | Verify | Lists pods/deployments/services, then curls `http://$(minikube ip):30080/health` and fails the build unless it returns 200. |
 
 `post { always }` runs `docker logout`; `post { failure }` prints `kubectl describe` and pod logs.
@@ -48,13 +55,14 @@ A `pollSCM` trigger checks GitHub every 5 minutes as a fallback when no webhook 
 
 ## 4. How the image was pushed
 
-The pipeline builds the image on the EC2 host and pushes `saksham122004/lifelog:<build>` and `:latest` to Docker Hub.
+The pipeline builds both images on the EC2 host and pushes `saksham122004/lifelog-backend` and `saksham122004/lifelog-frontend`, each as `:<build>` and `:latest`, to Docker Hub.
 An access token is used instead of the account password: it can be revoked, scoped, and never exposes the real password.
 
 ## 5. How it was deployed and accessed
 
-`k8s/deployment.yaml` runs 2 replicas with readiness and liveness probes on `/health`, small resource limits, and the pod name injected through the downward API.
-`k8s/service.yaml` is a NodePort service on 30080 (port 80 to container port 5000).
+`k8s/backend.yaml`: 1 replica (SQLite lives in the pod, so it cannot be shared), probes on `/health`, the pod name injected through the downward API, and an internal ClusterIP service `backend:5000`.
+`k8s/frontend.yaml`: 2 replicas of nginx with probes on `/nginx-health`, and a NodePort service `lifelog` on 30080 (port 80 to container port 8080).
+The footer shows both the frontend pod (from the `X-Frontend-Pod` header nginx adds) and the backend pod.
 
 Minikube with the docker driver runs inside a Docker network on the EC2 host, so `<ec2-public-ip>:30080` does not reach it directly.
 Pipeline checks use `minikube ip` from inside EC2. For the browser, forward the service on all interfaces:
@@ -68,7 +76,7 @@ Then open `http://<ec2-public-ip>:30080`.
 ## 6. What changed for the second run
 
 Branch `v2-goals` adds a **Goals** module (name, target, progress, deadline, percent complete) with its own tests.
-Merging it into `main` and pushing triggers a new build. The footer build number changes, the pod name changes after the rolling update, and a Goals link appears in the navigation.
+Merging it into `main` and pushing triggers a new build. The footer build number changes, the pod names change after the rolling update, and a Goals link appears in the navigation.
 The Jenkinsfile version also moves from 1.0.0 to 2.0.0.
 
 Persistence note: SQLite lives inside each pod, so data resets when a pod is replaced and each replica has its own data. A PersistentVolumeClaim (or a shared database) would fix this; it is left out to keep the assignment focused on the pipeline.
@@ -79,7 +87,8 @@ Persistence note: SQLite lives inside each pod, so data resets when a pod is rep
 |---|---|
 | `permission denied` on `/var/run/docker.sock` | `sudo usermod -aG docker jenkins` then `sudo systemctl restart jenkins`. |
 | `minikube: host does not exist` / `kubectl` cannot connect in a build | Minikube is not running for the jenkins user: `sudo -u jenkins minikube start --driver=docker`. |
-| `ImagePullBackOff` | Wrong Docker Hub username or the push failed; check the Push Image log and that the repo is public. |
+| `ImagePullBackOff` | Wrong Docker Hub username or the push failed; check the Push Image log and that both repos (`lifelog-backend`, `lifelog-frontend`) are public. |
+| Frontend shows `502 Bad Gateway` | Backend pod not ready: `kubectl get pods`, `kubectl logs deploy/lifelog-backend-backend`. |
 | `Verify` stage gets no 200 | `kubectl get pods`, then `kubectl logs deploy/lifelog`; wait for readiness. |
 | Port 30080 not reachable from the browser | Open the port in the security group and run the `port-forward` command above. |
 | `python3 -m venv` fails | `sudo apt install -y python3-venv`. |

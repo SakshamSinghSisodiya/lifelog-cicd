@@ -12,7 +12,7 @@ def test_health_returns_json(client):
 def test_dashboard_shows_seed_data_and_footer(client):
     html = client.get("/").get_data(as_text=True)
     assert "Drink 2L water" in html
-    assert "Build" in html and "Pod" in html and "Commit" in html
+    assert "Build" in html and "Backend pod" in html and "Commit" in html
 
 
 def test_footer_reads_environment(client, monkeypatch):
@@ -54,3 +54,8 @@ def test_set_budget_changes_percent(client):
     client.post("/expenses/budget", data={"budget": "145.5"})
     html = client.get("/expenses").get_data(as_text=True)
     assert "145.50" in html
+
+
+def test_footer_shows_frontend_pod_from_proxy_header(client):
+    html = client.get("/", headers={"X-Frontend-Pod": "lifelog-frontend-abc"}).get_data(as_text=True)
+    assert "lifelog-frontend-abc" in html

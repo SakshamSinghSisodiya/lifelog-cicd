@@ -43,3 +43,7 @@ def seed_demo_data(conn):
             amount = round(rng.uniform(60, 260) if category != "Bills" else rng.uniform(300, 900), 0)
             service.write_money(conn, ids["Spending"], day, amount, category, "")
     conn.commit()
+    for name, target, progress, days_ahead in [("Read 12 books", 12, 5, 120), ("Save 40000", 40000, 26500, 60), ("Run 100 km", 100, 38, 30)]:
+        conn.execute("INSERT INTO goals (name, target, progress, deadline) VALUES (?, ?, ?, ?)",
+                     (name, target, progress, (today + timedelta(days=days_ahead)).isoformat()))
+    conn.commit()

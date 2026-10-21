@@ -22,11 +22,12 @@ def create_app(test_config=None):
     app.jinja_env.filters["num"] = num
 
     from .api import bp as api_bp
+    from .goals import bp as goals_bp
     from .insights import bp as insights_bp
     from .trackers import bp as trackers_bp
     from .views import bp as views_bp
 
-    for blueprint in (views_bp, trackers_bp, insights_bp, api_bp):
+    for blueprint in (views_bp, trackers_bp, insights_bp, goals_bp, api_bp):
         app.register_blueprint(blueprint)
 
     @app.context_processor

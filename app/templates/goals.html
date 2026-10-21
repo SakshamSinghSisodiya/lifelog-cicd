@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_macros.html" import bar %}
+{% block title %}Goals{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Where you are heading</p><h1>Goals</h1></div></div>
+
+<section class="panel form-panel">
+  <h2>New goal</h2>
+  <form method="post" class="form">
+    <label for="name">Goal name</label>
+    <input id="name" name="name" maxlength="60" required>
+    <label for="target">Target number</label>
+    <input id="target" name="target" type="number" step="any" min="0.01" required>
+    <label for="progress">Current progress <small>(optional)</small></label>
+    <input id="progress" name="progress" type="number" step="any" min="0" value="0">
+    <label for="deadline">Deadline</label>
+    <input id="deadline" name="deadline" type="date" min="{{ today }}" required>
+    <div class="actions"><button class="btn" type="submit">Add goal</button></div>
+  </form>
+</section>
+
+<div class="stack-grid">
+{% for g in goals %}
+<section class="panel tone-{{ 'rose' if g.status == 'late' else 'sage' }}">
+  <h2>{{ g.name }}<span class="badge">{{ 'done' if g.status == 'done' else 'overdue' if g.status == 'late' else 'active' }}</span></h2>
+  <p class="big">{{ g.percent }}%<span> complete</span></p>
+  {{ bar(g.percent, g.name ~ ' progress') }}
+  <p class="facts"><b>{{ g.progress|num }}</b> of <b>{{ g.target|num }}</b> ·
+    {% if g.status == 'done' %}reached{% elif g.status == 'late' %}{{ -g.days_left }} days overdue{% else %}{{ g.days_left }} days left{% endif %}</p>
+  <form method="post" action="{{ url_for('goals.add_progress', goal_id=g.id) }}" class="inline">
+    <label class="sr" for="amt-{{ g.id }}">Add progress to {{ g.name }}</label>
+    <input id="amt-{{ g.id }}" name="amount" type="number" step="any" placeholder="+ progress" required>
+    <button class="btn ghost small">Update</button>
+  </form>
+  <form method="post" action="{{ url_for('goals.delete_goal', goal_id=g.id) }}"><button class="link-btn" aria-label="Delete goal {{ g.name }}">Delete</button></form>
+</section>
+{% else %}
+<section class="panel empty"><h2>No goals yet</h2><p>Add one above to start tracking progress toward it.</p></section>
+{% endfor %}
+</div>
+{% endblock %}

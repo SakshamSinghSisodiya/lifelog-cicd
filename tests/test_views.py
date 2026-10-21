@@ -97,9 +97,3 @@ def test_delete_entry(seeded, app):
     seeded.post(f"/entries/{entry_id}/delete")
     conn = sqlite3.connect(seeded.application.config["DATABASE"])
     assert conn.execute("SELECT COUNT(*) FROM entries WHERE id = ?", (entry_id,)).fetchone()[0] == 0
-
-
-def test_main_never_mentions_goals(seeded):
-    assert seeded.get("/goals").status_code == 404
-    for url in ("/", "/log", "/insights", "/trackers"):
-        assert "goals" not in seeded.get(url).get_data(as_text=True).lower(), url

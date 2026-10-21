@@ -23,6 +23,7 @@
           <a href="{{ url_for('main.log') }}" {% if ep == 'main.log' %}aria-current="page"{% endif %}>Log</a>
           <a href="{{ url_for('insights.view') }}" {% if ep == 'insights.view' %}aria-current="page"{% endif %}>Insights</a>
           <a href="{{ url_for('trackers.manage') }}" {% if ep.startswith('trackers.') %}aria-current="page"{% endif %}>Trackers</a>
+          <a href="{{ url_for('goals.goals') }}" {% if ep.startswith('goals.') %}aria-current="page"{% endif %}>Goals</a>
         </nav>
       </header>
       <form id="capture" class="capture" autocomplete="off" role="search" aria-label="Capture">

@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS actions (          -- what the capture bar did, so "u
     label TEXT NOT NULL,
     undone INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS goals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    target REAL NOT NULL,
+    progress REAL NOT NULL DEFAULT 0,
+    deadline TEXT NOT NULL
+);
 """
 
 

@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Goals</h1>
 <div class="grid">
-  <section class="card c-butter"><div class="card-body">
+  <section class="card c-butter span-4"><div class="card-body">
     <h2>New goal</h2>
     <form method="post" class="stack">
       <label for="name">Goal name</label>
@@ -16,7 +16,7 @@
     </form>
   </div></section>
   {% for g in goals %}
-  <section class="card c-sky"><div class="card-body">
+  <section class="card {{ loop.cycle('c-sky', 'c-mint', 'c-peach') }} span-4"><div class="card-body">
     <h2>{{ g.name }}</h2>
     <p class="big">{{ g.percent }}% <small>complete</small></p>
     {% set bar_value = g.percent %}{% set bar_label = g.name ~ ' progress' %}

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}LifeLog{% endblock %} · LifeLog</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='6,34 30,30 22,44' fill='%239bd8c4'/%3E%3Cpolygon points='30,30 58,12 40,40' fill='%23f7c6a8'/%3E%3Cpolygon points='22,44 30,30 40,40 34,52' fill='%238cc6ea'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -19,11 +20,12 @@
       </svg>
       <span>LifeLog</span>
     </a>
+    {% set ep = request.endpoint %}
     <nav aria-label="Main">
-      <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('main.habits') }}">Habits</a>
-      <a href="{{ url_for('main.expenses') }}">Expenses</a>
-      <a href="{{ url_for('goals.goals') }}">Goals</a>
+      <a href="{{ url_for('main.dashboard') }}" {% if ep == 'main.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
+      <a href="{{ url_for('main.habits') }}" {% if ep == 'main.habits' %}aria-current="page"{% endif %}>Habits</a>
+      <a href="{{ url_for('main.expenses') }}" {% if ep == 'main.expenses' %}aria-current="page"{% endif %}>Expenses</a>
+      <a href="{{ url_for('goals.goals') }}" {% if ep == 'goals.goals' %}aria-current="page"{% endif %}>Goals</a>
     </nav>
   </header>
   <main id="main">

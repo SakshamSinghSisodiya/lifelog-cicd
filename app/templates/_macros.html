@@ -1,0 +1,20 @@
+{# Seven diamonds for the last 7 days, oldest first #}
+{% macro week(flags, name) %}
+<ol class="week" aria-label="{{ name }}: {{ flags|selectattr('1')|list|length }} of 7 days done">
+  {% for day, hit in flags %}
+  <li class="{{ 'hit' if hit }}" title="{{ day.strftime('%a %d %b') }}: {{ 'done' if hit else 'missed' }}"><span>{{ day.strftime('%a')[0] }}</span></li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+{# Paper-strip bar chart of daily spend #}
+{% macro spend_chart(chart, total) %}
+<div class="chart" role="img" aria-label="Spending over the last 14 days, ${{ '%.2f'|format(total) }} in total">
+  {% for c in chart %}
+  <div class="col" title="{{ c.day.strftime('%a %d %b') }}: ${{ '%.2f'|format(c.value) }}">
+    <i class="bar" style="height: {{ c.height }}%"></i>
+    <span>{{ c.day.strftime('%d') }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

@@ -42,7 +42,7 @@ def test_toggle_checkin_twice_restores_state(client):
 
 def test_add_expense_updates_category_total(client):
     client.post("/expenses", data={"amount": "12.5", "category": "Health", "day": date.today().isoformat()})
-    assert "Health" in client.get("/expenses").get_data(as_text=True)
+    assert "$12.50" in client.get("/expenses").get_data(as_text=True)
 
 
 def test_invalid_expense_rejected(client):
@@ -51,11 +51,29 @@ def test_invalid_expense_rejected(client):
 
 
 def test_set_budget_changes_percent(client):
-    client.post("/expenses/budget", data={"budget": "145.5"})
+    client.post("/expenses/budget", data={"budget": "1234"})
     html = client.get("/expenses").get_data(as_text=True)
-    assert "145.50" in html
+    assert "$1234" in html
 
 
 def test_footer_shows_frontend_pod_from_proxy_header(client):
     html = client.get("/", headers={"X-Frontend-Pod": "lifelog-frontend-abc"}).get_data(as_text=True)
     assert "lifelog-frontend-abc" in html
+
+
+def test_delete_habit_and_expense(client):
+    client.post("/habits/1/delete")
+    assert "Drink 2L water" not in client.get("/habits").get_data(as_text=True)
+    client.post("/expenses", data={"amount": "777.77", "category": "Food", "day": date.today().isoformat()})
+    import sqlite3
+    conn = sqlite3.connect(client.application.config["DATABASE"])
+    new_id = conn.execute("SELECT id FROM expenses WHERE amount = 777.77").fetchone()[0]
+    conn.close()
+    client.post(f"/expenses/{new_id}/delete")
+    assert "777.77" not in client.get("/expenses").get_data(as_text=True)
+
+
+def test_dashboard_has_richer_sections(client):
+    html = client.get("/").get_data(as_text=True)
+    for text in ["Spending, last 14 days", "Goal progress", "Running on", "Budget left"]:
+        assert text in html

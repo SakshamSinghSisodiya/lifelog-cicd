@@ -30,7 +30,7 @@ def test_goals_page_and_nav_link(client):
 def test_add_goal_and_progress(client):
     deadline = (date.today() + timedelta(days=30)).isoformat()
     client.post("/goals", data={"name": "Read books", "target": "12", "deadline": deadline})
-    client.post("/goals/1/progress", data={"amount": "3"})
+    client.post("/goals/4/progress", data={"amount": "3"})
     html = client.get("/goals").get_data(as_text=True)
     assert "Read books" in html and "25.0%" in html
 

@@ -1,15 +1,48 @@
 {% extends "base.html" %}
+{% from "_macros.html" import week, spend_chart %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Today, {{ today.strftime('%A %d %B') }}</h1>
 <div class="grid">
-  <section class="card c-mint"><div class="card-body">
+  <section class="card c-mint span-12 hero"><div class="card-body hero-body">
+    <div>
+      <p class="eyebrow">{{ today.strftime('%A, %d %B %Y') }}</p>
+      <h1 id="greeting">Welcome back</h1>
+      <p class="quote">“{{ quote }}”</p>
+      <p><a class="btn" href="{{ url_for('main.habits') }}">Check in on habits</a></p>
+    </div>
+    <div class="ring" style="--pct: {{ pct }}" role="img" aria-label="{{ done }} of {{ habits|length }} habits done today">
+      <b>{{ done }}/{{ habits|length }}</b><small>habits today</small>
+    </div>
+  </div></section>
+
+  <section class="card c-peach span-3"><div class="card-body tile">
+    <p class="label">Spent this month</p><p class="stat">${{ '%.0f'|format(summary.spent) }}</p>
+    <p class="sub">{{ summary.percent }}% of ${{ '%.0f'|format(summary.budget) }} budget</p>
+  </div></section>
+  <section class="card c-sky span-3"><div class="card-body tile">
+    <p class="label">{{ 'Over budget by' if summary.left < 0 else 'Budget left' }}</p><p class="stat">${{ '%.0f'|format(summary.left|abs) }}</p>
+    <p class="sub">On pace for ${{ '%.0f'|format(projected) }}</p>
+  </div></section>
+  <section class="card c-butter span-3"><div class="card-body tile">
+    <p class="label">Best streak now</p><p class="stat">{{ best.current if best else 0 }} <small>days</small></p>
+    <p class="sub">{{ best.name if best and best.current else 'Check in to begin' }}</p>
+  </div></section>
+  <section class="card c-mint span-3"><div class="card-body tile">
+    <p class="label">Goals tracked</p><p class="stat">{{ goals|length }}</p>
+    <p class="sub"><a href="{{ url_for('goals.goals') }}">View goals</a></p>
+  </div></section>
+
+  <section class="card c-mint span-6"><div class="card-body">
     <h2>Today's habits</h2>
     {% if habits %}
     <ul class="list">
       {% for h in habits %}
       <li>
-        <span class="{{ 'done' if h.done_today }}">{{ h.name }}</span>
+        <div>
+          <span class="{{ 'done' if h.done_today }}">{{ h.name }}</span>
+          <small class="muted">{{ h.current }} day streak</small>
+          {{ week(h.week, h.name) }}
+        </div>
         <form method="post" action="{{ url_for('main.toggle', habit_id=h.id) }}">
           <input type="hidden" name="next" value="{{ url_for('main.dashboard') }}">
           <button class="btn small" type="submit" aria-pressed="{{ 'true' if h.done_today else 'false' }}">{{ 'Done ✓' if h.done_today else 'Check in' }}</button>
@@ -20,23 +53,47 @@
     {% else %}<p>No habits yet. <a href="{{ url_for('main.habits') }}">Add one</a>.</p>{% endif %}
   </div></section>
 
-  <section class="card c-peach"><div class="card-body">
-    <h2>{{ summary.month }} spend vs budget</h2>
-    <p class="big">${{ '%.2f'|format(summary.spent) }} <small>of ${{ '%.2f'|format(summary.budget) }}</small></p>
-    {% set bar_value = summary.bar %}{% set bar_label = 'Budget used' %}{% set bar_status = summary.status %}
-    {% include "_bar.html" %}
-    <p>{{ summary.percent }}% of budget used</p>
+  <section class="card c-sky span-6"><div class="card-body">
+    <h2>Spending, last 14 days <small class="muted">${{ '%.2f'|format(chart_total) }}</small></h2>
+    {{ spend_chart(chart, chart_total) }}
+    <h2 class="gap">By category</h2>
+    {% for s in summary.shares %}
+    <div class="cat"><span class="dot cat-{{ s.name|lower }}"></span><span>{{ s.name }}</span>
+      <div class="strip strip-cat cat-{{ s.name|lower }}" role="presentation"><span style="width: {{ s.percent }}%"></span></div>
+      <b>${{ '%.0f'|format(s.amount) }}</b></div>
+    {% else %}<p>Nothing logged this month.</p>{% endfor %}
   </div></section>
 
-  <section class="card c-sky"><div class="card-body">
-    <h2>Streak highlights</h2>
-    {% if best and best.current %}
-      <p class="big">{{ best.current }} day{{ '' if best.current == 1 else 's' }}</p>
-      <p>Current best streak: <strong>{{ best.name }}</strong></p>
-    {% else %}<p>Check in today to start a streak.</p>{% endif %}
-    <ul class="plain">
-      {% for h in habits %}<li>{{ h.name }}: best ever {{ h.longest }}</li>{% endfor %}
-    </ul>
+  <section class="card c-butter span-6"><div class="card-body">
+    <h2>Goal progress</h2>
+    {% for g in goals %}
+    <p class="row"><span>{{ g.name }}</span><b>{{ g.percent }}%</b></p>
+    {% set bar_value = g.percent %}{% set bar_label = g.name ~ ' progress' %}{% set bar_status = 'ok' %}
+    {% include "_bar.html" %}
+    {% else %}<p>No goals yet. <a href="{{ url_for('goals.goals') }}">Create one</a>.</p>{% endfor %}
+  </div></section>
+
+  <section class="card c-peach span-3"><div class="card-body">
+    <h2>Latest expenses</h2>
+    <ul class="plain">{% for e in recent %}<li class="row"><span>{{ e.category }}</span><b>${{ '%.2f'|format(e.amount) }}</b></li>{% endfor %}</ul>
+  </div></section>
+
+  <section class="card c-sky span-3"><div class="card-body">
+    <h2>Running on</h2>
+    <dl class="facts">
+      <dt>Version</dt><dd>{{ build.version }}</dd>
+      <dt>Build</dt><dd>#{{ build.number }}</dd>
+      <dt>Commit</dt><dd>{{ build.commit }}</dd>
+      <dt>Backend pod</dt><dd>{{ build.pod }}</dd>
+      <dt>Frontend pod</dt><dd>{{ build.frontend_pod }}</dd>
+    </dl>
   </div></section>
 </div>
+<script>
+  (function () {
+    var h = new Date().getHours();
+    var part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    document.getElementById("greeting").textContent = part + "!";
+  })();
+</script>
 {% endblock %}

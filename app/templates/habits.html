@@ -1,26 +1,39 @@
 {% extends "base.html" %}
+{% from "_macros.html" import week %}
 {% block title %}Habits{% endblock %}
 {% block content %}
 <h1>Habits</h1>
 <div class="grid">
-  <section class="card c-butter"><div class="card-body">
+  <section class="card c-butter span-4"><div class="card-body">
     <h2>New habit</h2>
     <form method="post" class="stack">
       <label for="name">Habit name</label>
       <input id="name" name="name" maxlength="60" required>
       <button class="btn" type="submit">Add habit</button>
     </form>
+    <h3>Quick add</h3>
+    <div class="chips">
+      {% for s in ['Stretch', 'No sugar', 'Sleep by 11', 'Call family'] %}
+      <form method="post"><input type="hidden" name="name" value="{{ s }}"><button class="chip" type="submit">+ {{ s }}</button></form>
+      {% endfor %}
+    </div>
   </div></section>
   {% for h in habits %}
-  <section class="card c-mint"><div class="card-body">
+  <section class="card {{ loop.cycle('c-mint', 'c-sky', 'c-peach') }} span-4"><div class="card-body">
     <h2>{{ h.name }}</h2>
-    <p>Current streak <strong>{{ h.current }}</strong> · Longest <strong>{{ h.longest }}</strong></p>
-    {% set bar_value = (h.current / h.longest * 100) if h.longest else 0 %}
-    {% set bar_label = 'Current streak compared with longest' %}
+    <p class="row"><span>Current streak <strong>{{ h.current }}</strong></span><span>Longest <strong>{{ h.longest }}</strong></span></p>
+    {{ week(h.week, h.name) }}
+    {% set bar_value = h.rate %}{% set bar_label = '30 day completion' %}{% set bar_status = 'ok' %}
     {% include "_bar.html" %}
-    <form method="post" action="{{ url_for('main.toggle', habit_id=h.id) }}">
-      <button class="btn" type="submit" aria-pressed="{{ 'true' if h.done_today else 'false' }}">{{ 'Done today ✓ (undo)' if h.done_today else 'Check in today' }}</button>
-    </form>
+    <p class="muted">{{ h.rate }}% of the last 30 days</p>
+    <div class="actions">
+      <form method="post" action="{{ url_for('main.toggle', habit_id=h.id) }}">
+        <button class="btn" type="submit" aria-pressed="{{ 'true' if h.done_today else 'false' }}">{{ 'Done today ✓ (undo)' if h.done_today else 'Check in today' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('main.delete_habit', habit_id=h.id) }}">
+        <button class="link-btn" type="submit" aria-label="Delete habit {{ h.name }}">Delete</button>
+      </form>
+    </div>
   </div></section>
   {% endfor %}
 </div>

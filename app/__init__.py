@@ -3,6 +3,7 @@ import os
 from flask import Flask
 
 from . import db
+from .goals import bp as goals_bp
 from .routes import bp
 
 VERSION_DEFAULT = "dev"
@@ -19,6 +20,7 @@ def create_app(test_config=None):
     db.init_db(app.config["DATABASE"])
     app.teardown_appcontext(db.close_db)
     app.register_blueprint(bp)
+    app.register_blueprint(goals_bp)
 
     @app.context_processor
     def build_info():

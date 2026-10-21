@@ -24,6 +24,13 @@ CREATE TABLE IF NOT EXISTS budgets (
     month TEXT PRIMARY KEY,
     amount REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS goals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    target REAL NOT NULL,
+    progress REAL NOT NULL DEFAULT 0,
+    deadline TEXT NOT NULL
+);
 """
 
 

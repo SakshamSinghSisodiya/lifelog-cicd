@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_USER = 'saksham122004'
         IMAGE          = "${DOCKERHUB_USER}/lifelog"
-        APP_VERSION    = '1.0.0'
+        APP_VERSION    = '2.0.0'
     }
 
     triggers {

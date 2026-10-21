@@ -33,7 +33,7 @@ def test_capture_applies_and_accumulates(app, client):
     tid = add(app, "Water", "count", 8)
     post(client, "/api/capture", text="water 3")
     data = post(client, "/api/capture", text="water 2")
-    assert data["ok"] and "→ 5/8" in data["message"]
+    assert data["ok"] and "→ 5/8" in data["message"] and data["preview"] == ""
     assert [v for _, v in values(app, tid)] == [5.0]
 
 

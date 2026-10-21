@@ -47,5 +47,5 @@ def capture():
         return jsonify(_payload(db, intent, today, {"ok": message is not None, "message": message or "Nothing to undo."}))
     if intent.kind in ("set", "add", "money"):
         message = service.apply_intent(db, intent, today, current_app.config["CURRENCY"])
-        return jsonify(_payload(db, intent, today, {"ok": True, "message": message}))
+        return jsonify(_payload(db, intent, today, {"ok": True, "message": message, "preview": ""}))
     return jsonify(_payload(db, intent, today, {"ok": False}))

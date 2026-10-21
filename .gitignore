@@ -6,3 +6,5 @@ data/
 *.db
 .env
 docs/_build/
+.DS_Store
+docs/lifelog-docs.zip

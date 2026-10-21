@@ -5,7 +5,7 @@ pipeline {
         DOCKERHUB_USER = 'saksham122004'
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/lifelog-backend"
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/lifelog-frontend"
-        APP_VERSION    = '2.0.0'
+        APP_VERSION    = '1.0.0'
     }
 
     triggers {

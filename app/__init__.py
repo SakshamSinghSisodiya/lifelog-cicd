@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, request
 
 from . import db
 from .goals import bp as goals_bp
@@ -31,6 +31,7 @@ def create_app(test_config=None):
                 "number": env("BUILD_NUMBER", "dev"),
                 "commit": env("GIT_COMMIT", "dev")[:7],
                 "pod": env("HOSTNAME", "dev"),
+                "frontend_pod": request.headers.get("X-Frontend-Pod", "none"),
             }
         }
 

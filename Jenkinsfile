@@ -3,8 +3,9 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = 'saksham122004'
-        IMAGE          = "${DOCKERHUB_USER}/lifelog"
-        APP_VERSION    = '2.0.0'
+        BACKEND_IMAGE  = "${DOCKERHUB_USER}/lifelog-backend"
+        FRONTEND_IMAGE = "${DOCKERHUB_USER}/lifelog-frontend"
+        APP_VERSION    = '1.0.0'
     }
 
     triggers {
@@ -24,7 +25,7 @@ pipeline {
                 script {
                     env.GIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                 }
-                echo "Building ${IMAGE}:${BUILD_NUMBER} from commit ${env.GIT_SHORT}"
+                echo "Building ${DOCKERHUB_USER}/lifelog-* :${BUILD_NUMBER} from commit ${env.GIT_SHORT}"
             }
         }
 
@@ -42,12 +43,14 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
-                    docker build \
-                        --build-arg APP_VERSION=${APP_VERSION} \
-                        --build-arg GIT_COMMIT=${GIT_SHORT} \
-                        --build-arg BUILD_NUMBER=${BUILD_NUMBER} \
-                        -t ${IMAGE}:${BUILD_NUMBER} \
-                        -t ${IMAGE}:latest .
+                    for part in backend frontend; do
+                        docker build -f ${part}/Dockerfile \
+                            --build-arg APP_VERSION=${APP_VERSION} \
+                            --build-arg GIT_COMMIT=${GIT_SHORT} \
+                            --build-arg BUILD_NUMBER=${BUILD_NUMBER} \
+                            -t ${DOCKERHUB_USER}/lifelog-${part}:${BUILD_NUMBER} \
+                            -t ${DOCKERHUB_USER}/lifelog-${part}:latest .
+                    done
                 '''
             }
         }
@@ -60,8 +63,10 @@ pipeline {
                     // Single-quoted so Groovy never interpolates the secret into the log
                     sh '''
                         echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
-                        docker push ${IMAGE}:${BUILD_NUMBER}
-                        docker push ${IMAGE}:latest
+                        for part in backend frontend; do
+                            docker push ${DOCKERHUB_USER}/lifelog-${part}:${BUILD_NUMBER}
+                            docker push ${DOCKERHUB_USER}/lifelog-${part}:latest
+                        done
                     '''
                 }
             }
@@ -70,9 +75,11 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 sh '''
-                    sed -i "s|image: .*|image: ${IMAGE}:${BUILD_NUMBER}|" k8s/deployment.yaml
+                    sed -i "s|image: .*|image: ${BACKEND_IMAGE}:${BUILD_NUMBER}|" k8s/backend.yaml
+                    sed -i "s|image: .*|image: ${FRONTEND_IMAGE}:${BUILD_NUMBER}|" k8s/frontend.yaml
                     kubectl apply -f k8s/
-                    kubectl rollout status deployment/lifelog --timeout=120s
+                    kubectl rollout status deployment/lifelog-backend --timeout=120s
+                    kubectl rollout status deployment/lifelog-frontend --timeout=120s
                 '''
             }
         }
@@ -101,9 +108,10 @@ pipeline {
         }
         failure {
             sh '''
-                kubectl describe deployment/lifelog || true
-                kubectl get pods -l app=lifelog || true
-                kubectl logs -l app=lifelog --tail=50 || true
+                kubectl describe deployment/lifelog-backend deployment/lifelog-frontend || true
+                kubectl get pods || true
+                kubectl logs deploy/lifelog-backend --tail=50 || true
+                kubectl logs deploy/lifelog-frontend --tail=50 || true
             '''
         }
     }

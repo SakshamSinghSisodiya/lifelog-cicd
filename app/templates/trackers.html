@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Trackers{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">What you track</p><h1>Trackers</h1></div></div>
+
+<section class="panel">
+  <h2>New tracker</h2>
+  <div class="types">
+    {% for ty, text in [('check', 'Done or not done, like Gym'), ('count', 'Reach a daily target, like Water 8'), ('number', 'A value each day, like Sleep hours'), ('mood', 'A 1 to 5 scale'), ('money', 'Spending with categories')] %}
+    <a class="type" href="{{ url_for('trackers.new', type=ty) }}"><b>{{ ty|capitalize }}</b><span>{{ text }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Active</h2>
+  <ul class="rows compact">
+    {% for t in active %}
+    <li class="row tone-{{ t.color }}"><span class="dot" aria-hidden="true"></span>
+      <a class="name" href="{{ url_for('trackers.detail', tracker_id=t.id) }}">{{ t.name }}</a>
+      <span class="meta">{{ t.type }}{% if t.target %} · {{ 'budget' if t.type == 'money' else 'target' }} {{ t.target|num }}{% endif %}</span>
+      <span class="row-ctl"><a href="{{ url_for('trackers.edit', tracker_id=t.id) }}">Edit</a></span></li>
+    {% else %}<li class="muted">No active trackers.</li>{% endfor %}
+  </ul>
+</section>
+
+{% if archived %}
+<section class="panel">
+  <h2>Archived</h2>
+  <ul class="rows compact">
+    {% for t in archived %}
+    <li class="row tone-{{ t.color }}"><span class="dot" aria-hidden="true"></span><span class="name">{{ t.name }}</span>
+      <form method="post" action="{{ url_for('trackers.archive', tracker_id=t.id, action='restore') }}" class="row-ctl"><button class="link-btn">Restore</button></form></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

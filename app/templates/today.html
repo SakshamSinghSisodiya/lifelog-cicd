@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "_macros.html" import mini, bar, control %}
+{% block title %}{{ 'Today' if is_today else day.strftime('%d %b') }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ 'Today' if is_today else 'Viewing a past day' }}</p>
+    <h1>{{ day.strftime('%A, %d %B') }}</h1>
+  </div>
+  <nav class="daynav" aria-label="Change day">
+    <a href="{{ url_for('main.today', d=prev_day.isoformat()) }}" aria-label="Previous day">←</a>
+    {% if not is_today %}<a href="{{ url_for('main.today') }}">Today</a>{% endif %}
+    {% if next_day %}<a href="{{ url_for('main.today', d=next_day.isoformat()) }}" aria-label="Next day">→</a>{% endif %}
+  </nav>
+</div>
+
+{% if not has_trackers %}
+<section class="panel empty">
+  <h2>Nothing to track yet</h2>
+  <p>Trackers are the things you log every day. Create one, or just type it in the bar above and LifeLog will offer to create it.</p>
+  <p><a class="btn" href="{{ url_for('trackers.new') }}">Create a tracker</a></p>
+</section>
+{% else %}
+<section class="summary" aria-label="Progress">
+  <p class="big">{{ done }}<span> of {{ total }} done</span></p>
+  {{ bar(pct, 'Trackers done today') }}
+  {% if money.budget or money.month %}<p class="muted">{{ currency }}{{ money.today|num }} spent today · {{ currency }}{{ money.month|num }} this month</p>{% endif %}
+</section>
+
+<div class="layout">
+  <section class="panel" aria-labelledby="h-trackers">
+    <h2 id="h-trackers">Trackers</h2>
+    <ul class="rows">
+      {% for r in due %}
+      <li class="row tone-{{ r.color }} {{ 'met' if r.met }}">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="row-main">
+          <a class="name" href="{{ url_for('trackers.detail', tracker_id=r.id) }}">{{ r.name }}</a>
+          <span class="meta">
+            {% if r.type in ('check', 'count') %}{{ r.streak }} day streak{% elif r.type == 'money' %}Spending{% else %}{{ r.type|capitalize }}{% endif %}
+          </span>
+          {% if r.type == 'count' and r.target %}{{ bar(r.pct, r.name ~ ' progress') }}{% endif %}
+          {{ mini(r.week) }}
+        </div>
+        <div class="row-ctl">{{ control(r, day, currency) }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if off %}
+    <details class="off">
+      <summary>Not scheduled today ({{ off|length }})</summary>
+      <ul class="rows">
+        {% for r in off %}
+        <li class="row tone-{{ r.color }}"><span class="dot" aria-hidden="true"></span>
+          <div class="row-main"><a class="name" href="{{ url_for('trackers.detail', tracker_id=r.id) }}">{{ r.name }}</a></div>
+          <div class="row-ctl">{{ control(r, day, currency) }}</div></li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+  </section>
+
+  <aside class="side">
+    {% if money.budget or money.month %}
+    <section class="panel">
+      <h2>Spending this month</h2>
+      <p class="big small">{{ currency }}{{ money.month|num }}{% if money.budget %}<span> of {{ currency }}{{ money.budget|num }}</span>{% endif %}</p>
+      {% if money.budget %}{{ bar(money.percent if money.percent < 100 else 100, 'Budget used') }}{% endif %}
+      <ul class="plain">
+        {% for name, amount in money.by_category.items() %}{% if loop.index <= 4 %}<li class="row2"><span>{{ name }}</span><b>{{ currency }}{{ amount|num }}</b></li>{% endif %}{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    <section class="panel">
+      <h2>Recent captures</h2>
+      {% if recent %}<ul class="plain">{% for label in recent %}<li>{{ label }}</li>{% endfor %}</ul>
+      {% else %}<p class="muted">Nothing captured yet. Try the bar above.</p>{% endif %}
+    </section>
+    <section class="panel">
+      <h2>Capture cheatsheet</h2>
+      <dl class="cheats">
+        <dt><code>gym</code></dt><dd>mark done</dd>
+        <dt><code>water 3</code></dt><dd>add 3</dd>
+        <dt><code>sleep 7.5</code></dt><dd>set a value</dd>
+        <dt><code>spent 250 lunch</code></dt><dd>money, auto category</dd>
+        <dt><code>mon gym</code></dt><dd>backfill a day</dd>
+        <dt><code>undo</code></dt><dd>reverse the last log</dd>
+      </dl>
+    </section>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

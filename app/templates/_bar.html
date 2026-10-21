@@ -1,4 +1,0 @@
-{# Folded paper strip. Usage: include with bar_value (0-100) and bar_label #}
-<div class="strip strip-{{ bar_status|default('ok') }}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ bar_value|round|int }}" aria-label="{{ bar_label }}">
-  <span style="width: {{ bar_value }}%"></span>
-</div>

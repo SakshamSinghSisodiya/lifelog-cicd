@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit ' ~ tracker.name if tracker else 'New tracker' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">{{ ttype|capitalize }} tracker</p><h1>{{ 'Edit ' ~ tracker.name if tracker else 'New tracker' }}</h1></div></div>
+<section class="panel form-panel">
+  {% if not tracker %}
+  <p class="typepick">Type:
+    {% for ty in types %}<a href="{{ url_for('trackers.new', type=ty) }}" {% if ty == ttype %}aria-current="true"{% endif %}>{{ ty }}</a>{% endfor %}
+  </p>
+  {% endif %}
+  <form method="post" class="form">
+    <input type="hidden" name="type" value="{{ ttype }}">
+    <label for="name">Name</label>
+    <input id="name" name="name" maxlength="40" required value="{{ tracker.name if tracker else request.form.get('name', '') }}">
+
+    <fieldset>
+      <legend>Colour</legend>
+      <div class="swatches">
+        {% for tone in tones %}
+        <label class="swatch tone-{{ tone }}"><input type="radio" name="color" value="{{ tone }}" {% if (tracker.color if tracker else 'sage') == tone %}checked{% endif %}><span>{{ tone }}</span></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    {% if ttype in ('count', 'number', 'money', 'check') %}
+    <label for="unit">Unit <small>(optional)</small></label>
+    <input id="unit" name="unit" maxlength="12" value="{{ tracker.unit if tracker else '' }}" placeholder="{{ 'glasses, km, kg…' }}">
+    {% endif %}
+    {% if ttype in ('count', 'money') %}
+    <label for="target">{{ 'Monthly budget' if ttype == 'money' else 'Daily target' }} <small>(optional)</small></label>
+    <input id="target" name="target" type="number" step="any" min="0" value="{{ tracker.target|num if tracker and tracker.target else '' }}">
+    {% endif %}
+
+    <fieldset>
+      <legend>Schedule</legend>
+      <div class="days">
+        {% for name in day_names %}
+        <label class="daybox"><input type="checkbox" name="days" value="{{ loop.index0 }}" {% if loop.index0|string in (tracker.days if tracker else '0123456') %}checked{% endif %}><span>{{ name }}</span></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <div class="actions"><button class="btn" type="submit">{{ 'Save changes' if tracker else 'Create tracker' }}</button>
+      <a href="{{ url_for('trackers.manage') }}">Cancel</a></div>
+  </form>
+</section>
+{% endblock %}

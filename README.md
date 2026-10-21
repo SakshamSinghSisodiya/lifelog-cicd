@@ -2,15 +2,12 @@
 
 ## 1. Project chosen
 
-**LifeLog** is a small personal life tracker (Python 3.12, Flask, SQLite, gunicorn).
-Version 1 has three modules:
+**LifeLog** is a "one-line life log" (Python 3.12, Flask, SQLite, gunicorn). The main way to use it is a **capture bar** pinned to the top of every page (press `/` to focus it). Everything else is a clean view of what was captured.
 
-- **Habits**: add habits, daily check-in toggle, current and longest streak.
-- **Expenses**: log amount, category and date; monthly total per category; monthly budget with percent used.
-- **Dashboard**: today's habits, this month's spend vs budget, streak highlights.
-
-The footer of every page shows the version, build number, git commit and pod name, so a pipeline run is visible in the browser.
-The UI uses an "origami fold" look (paper cards with folded corners, creases and layered shadows) in a single CSS file.
+- **Trackers:** check (done / not done), count (reach a daily target), number (a value per day), mood (1 to 5) and money (spending with categories). Each has a colour, optional unit and target, and a weekday schedule.
+- **Capture bar:** a pure-Python parser (`app/capture.py`) turns plain text into an action, with a live preview while typing:
+  `gym`, `water 3`, `sleep 7.5`, `mood 4`, `spent 250 lunch`, `-250 uber`, `yesterday gym`, `gym mon`, `undo`. Tracker names match by unique prefix and typos; unknown names offer a one-click "Create tracker".
+- **Views:** Today (inline controls and progress), Log (everything captured), Insights (streaks, trends, spending), and Trackers (create, edit, archive, history heatmap).
 
 Run locally:
 
@@ -21,12 +18,12 @@ pytest -q
 flask --app wsgi run        # http://127.0.0.1:5000
 ```
 
-Layout: `app/` (factory, routes, `db.py`, pure logic in `habits_logic.py` and `expenses_logic.py`), `tests/`, `backend/Dockerfile`, `frontend/` (nginx image), `docker-compose.yml`, `Jenkinsfile`, `k8s/`.
+Layout: `app/` (factory, `capture.py` parser, `stats.py` streak maths, `service.py` database operations, `views.py`, `trackers.py`, `insights.py`, `api.py`), `app/static/` (CSS and vanilla JS), `tests/`, `backend/Dockerfile`, `frontend/` (nginx image), `docker-compose.yml`, `Jenkinsfile`, `k8s/`. The footer of every page shows the version, build number, commit and pod names, so each pipeline run is visible in the browser.
 
 Two images are built from one repo:
 
 - **Backend** (`lifelog-backend`): Flask + gunicorn + SQLite, port 5000, 1 replica.
-- **Frontend** (`lifelog-frontend`): nginx serving the static CSS and proxying all other requests to the backend, port 8080, 2 replicas. It is the only public entry point.
+- **Frontend** (`lifelog-frontend`): nginx serving the static CSS and JS and proxying all other requests to the backend, port 8080, 2 replicas. It is the only public entry point.
 
 Run both locally: `docker compose up --build`, then open http://localhost:8080.
 
@@ -75,7 +72,7 @@ Then open `http://<ec2-public-ip>:30080`.
 
 ## 6. What changed for the second run
 
-Branch `v2-goals` adds a **Goals** module (name, target, progress, deadline, percent complete) with its own tests.
+Branch `v2-goals` adds a **Goals** module (name, target number, current progress, deadline, percent complete) with its own tests; `main` does not contain it.
 Merging it into `main` and pushing triggers a new build. The footer build number changes, the pod names change after the rolling update, and a Goals link appears in the navigation.
 The Jenkinsfile version also moves from 1.0.0 to 2.0.0.
 

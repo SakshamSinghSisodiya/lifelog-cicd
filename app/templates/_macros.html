@@ -1,20 +1,41 @@
-{# Seven diamonds for the last 7 days, oldest first #}
-{% macro week(flags, name) %}
-<ol class="week" aria-label="{{ name }}: {{ flags|selectattr('1')|list|length }} of 7 days done">
-  {% for day, hit in flags %}
-  <li class="{{ 'hit' if hit }}" title="{{ day.strftime('%a %d %b') }}: {{ 'done' if hit else 'missed' }}"><span>{{ day.strftime('%a')[0] }}</span></li>
-  {% endfor %}
-</ol>
+{% macro mini(cells) %}
+<ol class="mini" aria-hidden="true">{% for c in cells %}<li class="{{ c.state }}" title="{{ c.day.strftime('%a %d %b') }}"></li>{% endfor %}</ol>
 {% endmacro %}
 
-{# Paper-strip bar chart of daily spend #}
-{% macro spend_chart(chart, total) %}
-<div class="chart" role="img" aria-label="Spending over the last 14 days, ${{ '%.2f'|format(total) }} in total">
-  {% for c in chart %}
-  <div class="col" title="{{ c.day.strftime('%a %d %b') }}: ${{ '%.2f'|format(c.value) }}">
-    <i class="bar" style="height: {{ c.height }}%"></i>
-    <span>{{ c.day.strftime('%d') }}</span>
-  </div>
-  {% endfor %}
-</div>
+{% macro bar(pct, label) %}
+<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}" aria-label="{{ label }}"><i style="width: {{ pct }}%"></i></div>
+{% endmacro %}
+
+{# Inline controls on the Today page; every form is enhanced by app.js and still works without it #}
+{% macro control(r, day, currency) %}
+{% set action = url_for('main.log_inline', tracker_id=r.id) %}
+{% if r.type == 'check' %}
+<form method="post" action="{{ action }}" data-ajax>
+  <input type="hidden" name="d" value="{{ day.isoformat() }}"><input type="hidden" name="op" value="toggle">
+  <button class="check {{ 'on' if r.met }}" aria-pressed="{{ 'true' if r.met else 'false' }}" aria-label="{{ r.name }}: mark {{ 'not done' if r.met else 'done' }}">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</form>
+{% elif r.type == 'count' %}
+<form method="post" action="{{ action }}" class="stepper" data-ajax>
+  <input type="hidden" name="d" value="{{ day.isoformat() }}">
+  <button name="op" value="dec" aria-label="Decrease {{ r.name }}">−</button>
+  <span class="val">{{ (r.value or 0)|num }}{% if r.target %}<small>/{{ r.target|num }}</small>{% endif %}{% if r.unit %}<small> {{ r.unit }}</small>{% endif %}</span>
+  <button name="op" value="inc" aria-label="Increase {{ r.name }}">+</button>
+</form>
+{% elif r.type == 'number' %}
+<form method="post" action="{{ action }}" class="inline" data-ajax>
+  <input type="hidden" name="d" value="{{ day.isoformat() }}"><input type="hidden" name="op" value="set">
+  <input name="value" type="number" step="any" inputmode="decimal" value="{{ r.value|num if r.value is not none }}" placeholder="–" aria-label="{{ r.name }} value">
+  {% if r.unit %}<span class="unit">{{ r.unit }}</span>{% endif %}
+  <button class="btn ghost small">Save</button>
+</form>
+{% elif r.type == 'mood' %}
+<form method="post" action="{{ action }}" class="moods" data-ajax>
+  <input type="hidden" name="d" value="{{ day.isoformat() }}"><input type="hidden" name="op" value="mood">
+  {% for n in range(1, 6) %}<button name="value" value="{{ n }}" class="{{ 'on' if r.value == n }}" aria-pressed="{{ 'true' if r.value == n else 'false' }}" aria-label="Mood {{ n }} of 5">{{ n }}</button>{% endfor %}
+</form>
+{% else %}
+<span class="val">{{ currency }}{{ (r.value or 0)|num }}<small> today</small></span>
+{% endif %}
 {% endmacro %}

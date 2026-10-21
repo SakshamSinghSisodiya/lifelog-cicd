@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Goals{% endblock %}
+{% block content %}
+<h1>Goals</h1>
+<div class="grid">
+  <section class="card c-butter"><div class="card-body">
+    <h2>New goal</h2>
+    <form method="post" class="stack">
+      <label for="name">Goal name</label>
+      <input id="name" name="name" maxlength="60" required>
+      <label for="target">Target number</label>
+      <input id="target" name="target" type="number" step="any" min="0.01" required>
+      <label for="deadline">Deadline</label>
+      <input id="deadline" name="deadline" type="date" min="{{ today }}" required>
+      <button class="btn" type="submit">Add goal</button>
+    </form>
+  </div></section>
+  {% for g in goals %}
+  <section class="card c-sky"><div class="card-body">
+    <h2>{{ g.name }}</h2>
+    <p class="big">{{ g.percent }}% <small>complete</small></p>
+    {% set bar_value = g.percent %}{% set bar_label = g.name ~ ' progress' %}
+    {% set bar_status = 'over' if g.status == 'late' else 'ok' %}
+    {% include "_bar.html" %}
+    <p>{{ g.progress|round(2) }} of {{ g.target|round(2) }} ·
+      {% if g.status == 'done' %}Done!{% elif g.status == 'late' %}{{ -g.days_left }} days overdue{% else %}{{ g.days_left }} days left{% endif %}
+    </p>
+    <form method="post" action="{{ url_for('goals.add_progress', goal_id=g.id) }}" class="stack">
+      <label for="amt-{{ g.id }}">Add progress</label>
+      <input id="amt-{{ g.id }}" name="amount" type="number" step="any" required>
+      <button class="btn small" type="submit">Update</button>
+    </form>
+  </div></section>
+  {% endfor %}
+</div>
+{% endblock %}
